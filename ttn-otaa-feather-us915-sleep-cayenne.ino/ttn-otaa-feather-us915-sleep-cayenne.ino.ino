@@ -161,7 +161,7 @@ void onEvent (ev_t ev) {
 
             Serial.flush();
 
-/*
+
             // Sleep for a period of TX_INTERVAL using single shot alarm
             rtc.setAlarmEpoch(rtc.getEpoch() + TX_INTERVAL);
             rtc.enableAlarm(rtc.MATCH_YYMMDDHHMMSS);
@@ -173,8 +173,8 @@ void onEvent (ev_t ev) {
             // Reinitialize USB for debugging
             USBDevice.init();
             USBDevice.attach();
-*/
-            delay(TX_INTERVAL);
+
+            //delay(TX_INTERVAL);
 
             os_setTimedCallback(&sendjob, os_getTime()+sec2osticks(TX_INTERVAL), do_send);
             //os_setTimedCallback(&sendjob, os_getTime()+sec2osticks(TX_INTERVAL), do_send);
