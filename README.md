@@ -1,4 +1,11 @@
-# Required Arduino setup
+# Setup 
+
+## Raspberry Pi
+
+- [RAK 831 Developer Kit or Equivalent](https://store.rakwireless.com/products/rak831-gateway-module?variant=22375114801252)
+
+- [Chirpstack OS](https://www.chirpstack.io/gateway-os/overview/)
+
 
 ## Arduino IDE
 
