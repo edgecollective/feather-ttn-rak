@@ -21,6 +21,9 @@
 - [Latest version of ArduinoJson](https://github.com/bblanchon/ArduinoJson)
 - [Version 2.3.2 of arduino-lmic](https://github.com/mcci-catena/arduino-lmic/releases/tag/v2.3.2)
 
+Optional:
+- [SDI-12 library](https://github.com/EnviroDIY/Arduino-SDI-12)
+
 ## Adafruit Feather M0 LoRA Hardware
 
 Pin 6 connected to Pin i01
