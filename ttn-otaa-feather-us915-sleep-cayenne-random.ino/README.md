@@ -1,11 +1,11 @@
-# Required setup
+# Required Arduino IDE setup
 
-## Boards
+## Board Definitions
 
 - Arduino SAMD
 - Adafruit SAMD
 
-## Libraries
+## Arduino Libraries
 
 - [Latest version of RTCZero](https://github.com/arduino-libraries/RTCZero)
 - [Latest verison of CayenneLPP](https://github.com/ElectronicCats/CayenneLPP)
