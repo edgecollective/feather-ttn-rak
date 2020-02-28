@@ -35,14 +35,20 @@
 // NOTE: as of Feb 16 2020, release v2.3.2 of the mcci-catenda/arduino-lmic library works, but some later versions did not work. should test them.
 // v2.3.2 release is here: https://github.com/mcci-catena/arduino-lmic/releases/tag/v2.3.2
 
+//using cayenne: https://github.com/ElectronicCats/CayenneLPP
+
 
 #include <lmic.h>
 #include <hal/hal.h>
 #include <SPI.h>
-#include "RTCZero.h" https://github.com/arduino-libraries/RTCZero
+#include "RTCZero.h" // https://github.com/arduino-libraries/RTCZero
+#include <CayenneLPP.h> // https://github.com/ElectronicCats/CayenneLPP
+#include <ArduinoJson.h> // https://github.com/bblanchon/ArduinoJson
 
+#define RTC_SLEEP 0
 
 RTCZero rtc;
+CayenneLPP lpp(51);
 
 // This EUI must be in little-endian format, so least-significant-byte
 // first. When copying an EUI from ttnctl output, this means to reverse
@@ -52,7 +58,7 @@ static const u1_t PROGMEM APPEUI[8]= {0x22,0x22,0x22,0x22,0x22,0x22,0x22,0x22};
 void os_getArtEui (u1_t* buf) { memcpy_P(buf, APPEUI, 8);}
 
 // This should also be in little endian format, see above.
-static const u1_t PROGMEM DEVEUI[8]= {0x35,0x95,0xb5,0xbd,0xde,0x86,0x7c,0x17};
+static const u1_t PROGMEM DEVEUI[8]= {0xd6,0xe5,0x86,0x69,0xad,0x1b,0x72,0x96};
 void os_getDevEui (u1_t* buf) { memcpy_P(buf, DEVEUI, 8);}
 
 // This key should be in big endian format (or, since it is not really a
@@ -157,18 +163,29 @@ void onEvent (ev_t ev) {
 
             Serial.flush();
 
+
+            if(RTC_SLEEP) {
+
             // Sleep for a period of TX_INTERVAL using single shot alarm
             rtc.setAlarmEpoch(rtc.getEpoch() + TX_INTERVAL);
             rtc.enableAlarm(rtc.MATCH_YYMMDDHHMMSS);
             rtc.attachInterrupt(alarmMatch);
+            
             // USB port consumes extra current
             USBDevice.detach();
+           
             // Enter sleep mode
             rtc.standbyMode();
+            
+            
             // Reinitialize USB for debugging
             USBDevice.init();
             USBDevice.attach();
-
+            }
+            else{
+            delay(TX_INTERVAL); // if not entering standby mode, do this
+            }
+            
             os_setTimedCallback(&sendjob, os_getTime()+sec2osticks(TX_INTERVAL), do_send);
             //os_setTimedCallback(&sendjob, os_getTime()+sec2osticks(TX_INTERVAL), do_send);
             break;
@@ -211,8 +228,18 @@ void do_send(osjob_t* j){
     if (LMIC.opmode & OP_TXRXPEND) {
         Serial.println(F("OP_TXRXPEND, not sending"));
     } else {
+
+
+  lpp.reset();
+  lpp.addTemperature(1, 22.5);
+  lpp.addBarometricPressure(2, 1073.21);
+  lpp.addGPS(3, 52.37365, 4.88650, 2);
+
+  
         // Prepare upstream data transmission at the next possible time.
-        LMIC_setTxData2(1, mydata, sizeof(mydata)-1, 0);
+        //LMIC_setTxData2(1, mydata, sizeof(mydata)-1, 0);
+   LMIC_setTxData2(1, lpp.getBuffer(), lpp.getSize(), 0);
+        
         Serial.println(F("Packet queued"));
     }
     // Next TX is scheduled after TX_COMPLETE event.
@@ -249,11 +276,12 @@ void setup() {
     Serial.begin(9600);
     Serial.println(F("Starting"));
 
+if(RTC_SLEEP) {
       // Initialize RTC
     rtc.begin();
     // Use RTC as a second timer instead of calendar
     rtc.setEpoch(0);
-
+}
   
     // LMIC init
     os_init();

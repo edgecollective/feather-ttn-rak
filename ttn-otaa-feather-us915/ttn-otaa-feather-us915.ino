@@ -32,26 +32,9 @@
  *
  *******************************************************************************/
 
-// NOTE: as of Feb 16 2020, release v2.3.2 of the mcci-catenda/arduino-lmic library works, but some later versions did not work. should test them.
-// v2.3.2 release is here: https://github.com/mcci-catena/arduino-lmic/releases/tag/v2.3.2
-
-//using cayenne: https://github.com/ElectronicCats/CayenneLPP
-
-
 #include <lmic.h>
 #include <hal/hal.h>
 #include <SPI.h>
-#include "RTCZero.h" https://github.com/arduino-libraries/RTCZero
-#include <CayenneLPP.h> // https://github.com/ElectronicCats/CayenneLPP
-#include <ArduinoJson.h> // https://github.com/bblanchon/ArduinoJson
-
-RTCZero rtc;
-CayenneLPP lpp(51);
-
-// This EUI must be in little-endian format, so least-significant-byte
-// first. When copying an EUI from ttnctl output, this means to reverse
-// the bytes. For TTN issued EUIs the last bytes should be 0xD5, 0xB3,
-// 0x70.
 static const u1_t PROGMEM APPEUI[8]= {0x22,0x22,0x22,0x22,0x22,0x22,0x22,0x22};
 void os_getArtEui (u1_t* buf) { memcpy_P(buf, APPEUI, 8);}
 
@@ -70,7 +53,7 @@ static osjob_t sendjob;
 
 // Schedule TX every this many seconds (might become longer due to duty
 // cycle limitations).
-const unsigned TX_INTERVAL = 30;
+const unsigned TX_INTERVAL = 60;
 
 const lmic_pinmap lmic_pins = {
     .nss = 8,
@@ -130,7 +113,7 @@ void onEvent (ev_t ev) {
             }
             // Disable link check validation (automatically enabled
             // during join, but because slow data rates change max TX
-      // size, we don't use it in this example.
+	    // size, we don't use it in this example.
             LMIC_setLinkCheckMode(0);
             break;
         /*
@@ -158,26 +141,7 @@ void onEvent (ev_t ev) {
               Serial.println(F(" bytes of payload"));
             }
             // Schedule next transmission
-
-            Serial.flush();
-
-
-            // Sleep for a period of TX_INTERVAL using single shot alarm
-            rtc.setAlarmEpoch(rtc.getEpoch() + TX_INTERVAL);
-            rtc.enableAlarm(rtc.MATCH_YYMMDDHHMMSS);
-            rtc.attachInterrupt(alarmMatch);
-            // USB port consumes extra current
-            USBDevice.detach();
-            // Enter sleep mode
-            rtc.standbyMode();
-            // Reinitialize USB for debugging
-            USBDevice.init();
-            USBDevice.attach();
-
-            //delay(TX_INTERVAL);
-
             os_setTimedCallback(&sendjob, os_getTime()+sec2osticks(TX_INTERVAL), do_send);
-            //os_setTimedCallback(&sendjob, os_getTime()+sec2osticks(TX_INTERVAL), do_send);
             break;
         case EV_LOST_TSYNC:
             Serial.println(F("EV_LOST_TSYNC"));
@@ -218,68 +182,31 @@ void do_send(osjob_t* j){
     if (LMIC.opmode & OP_TXRXPEND) {
         Serial.println(F("OP_TXRXPEND, not sending"));
     } else {
-
-  int rand_temp = random(0,10);
-  float temp_decimal=1/float(rand_temp);
-  float temp = 22.0 + temp_decimal;
-  
-  lpp.reset();
-  lpp.addTemperature(1, temp);
-  lpp.addBarometricPressure(2, 1073.21);
-  lpp.addGPS(3, 52.37365, 4.88650, 2);
-
-  
         // Prepare upstream data transmission at the next possible time.
-        //LMIC_setTxData2(1, mydata, sizeof(mydata)-1, 0);
-   LMIC_setTxData2(1, lpp.getBuffer(), lpp.getSize(), 0);
-        
+        LMIC_setTxData2(1, mydata, sizeof(mydata)-1, 0);
         Serial.println(F("Packet queued"));
     }
     // Next TX is scheduled after TX_COMPLETE event.
 }
 
 void setup() {
-    //delay(5000);
-
-    //pinMode(13, INPUT_PULLUP);
-
-
-    pinMode(0,INPUT_PULLUP);
-    pinMode(1,INPUT_PULLUP);
-    pinMode(A0,INPUT_PULLUP);
-    pinMode(A1,INPUT_PULLUP);
-    pinMode(A2,INPUT_PULLUP);
-    pinMode(A3,INPUT_PULLUP);
-    pinMode(A4,INPUT_PULLUP);
-    pinMode(A5,INPUT_PULLUP);
-    pinMode(0,INPUT_PULLUP);
-    pinMode(1,INPUT_PULLUP);
-    pinMode(5,INPUT_PULLUP);
-    pinMode(9,INPUT_PULLUP);
-    pinMode(10,INPUT_PULLUP);
-    pinMode(11,INPUT_PULLUP);
-    pinMode(12,INPUT_PULLUP);
-    pinMode(13,INPUT_PULLUP);
-    
-
-
-
-
-    
+    delay(5000);
+    while (! Serial)
+        ;
     Serial.begin(9600);
     Serial.println(F("Starting"));
 
-      // Initialize RTC
-    rtc.begin();
-    // Use RTC as a second timer instead of calendar
-    rtc.setEpoch(0);
+    #ifdef VCC_ENABLE
+    // For Pinoccio Scout boards
+    pinMode(VCC_ENABLE, OUTPUT);
+    digitalWrite(VCC_ENABLE, HIGH);
+    delay(1000);
+    #endif
 
-  
     // LMIC init
     os_init();
     // Reset the MAC state. Session and pending data transfers will be discarded.
     LMIC_reset();
-    LMIC_setClockError(MAX_CLOCK_ERROR * 1 / 100);
 
     LMIC_setLinkCheckMode(0);
     LMIC_setDrTxpow(DR_SF7,14);
@@ -291,9 +218,4 @@ void setup() {
 
 void loop() {
     os_runloop_once();
-}
-
-void alarmMatch()
-{
-
 }
