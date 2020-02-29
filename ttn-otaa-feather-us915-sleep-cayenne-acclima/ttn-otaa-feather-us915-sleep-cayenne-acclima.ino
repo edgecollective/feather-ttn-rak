@@ -50,6 +50,9 @@
 
 #define VBATPIN A7
 
+#define RTC_SLEEP 0 // whether to sleep or not
+
+
 //---------- ACCLIMA
 
 #define SERIAL_BAUD 115200  // The baud rate for the output serial port
@@ -103,6 +106,9 @@ char decToChar(byte i){
 // gets identification information from a sensor, and prints it to the serial port
 // expects a character between '0'-'9', 'a'-'z', or 'A'-'Z'.
 void printInfo(char i){
+  
+  Serial.println("printInfo ..");
+  
   String command = "";
   command += (char) i;
   command += "I!";
@@ -144,6 +150,8 @@ void printBufferToScreen(){
 
 void getParams(){
 
+  Serial.println("get Params ..");
+
     mySDI12.read();  // discard address
     int param = 0;
     while(mySDI12.available()){
@@ -156,20 +164,15 @@ void getParams(){
 
         } 
     }
-
-    // read the battery voltage
-    float measuredvbat = analogRead(VBATPIN);
-measuredvbat *= 2;    // we divided by 2, so multiply back
-measuredvbat *= 3.3;  // Multiply by 3.3V, our reference voltage
-measuredvbat /= 1024; // convert to voltage
-Serial.print("VBat: " ); Serial.println(measuredvbat);
-     params[param]=measuredvbat;
     
     Serial.println();
 
 }
 
 void takeMeasurement(char i){
+
+    Serial.println("takeMeasurement ..");
+
   String command = "";
   command += i;
   command += "M!"; // SDI-12 measurement command format  [address]['M'][!]
@@ -214,6 +217,9 @@ void takeMeasurement(char i){
   command += i;
   command += "D0!"; // SDI-12 command to get data [address][D][dataOption][!]
   mySDI12.sendCommand(command);
+
+  Serial.println("waiting for acknolwedgement ...");
+
   while(!(mySDI12.available()>1)){}  // wait for acknowlegement
   delay(300); // let the data transfer
   
@@ -280,7 +286,6 @@ boolean setVacant(byte i){
 
 //------------------- SLEEP
 
-#define RTC_SLEEP 0
 
 RTCZero rtc;
 CayenneLPP lpp(51);
@@ -465,28 +470,22 @@ void do_send(osjob_t* j){
     } else {
 
 
+// read the battery voltage
+    float measuredvbat = analogRead(VBATPIN);
+measuredvbat *= 2;    // we divided by 2, so multiply back
+measuredvbat *= 3.3;  // Multiply by 3.3V, our reference voltage
+measuredvbat /= 1024; // convert to voltage
+Serial.print("VBat: " ); Serial.println(measuredvbat);
 
+     
 // SDI-12 stuff
 
 char i = '0';
-
-for (int k=0;k<2;k++) {
-    digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
-  delay(1000);                       // wait for a second
-  digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
-  delay(1000);                       // wait for a second
-}
 
 Serial.println("trying SDI-12 ...");
 
      printInfo(i);
      takeMeasurement(i);
-for (int k=0;k<3;k++) {
-    digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
-  delay(100);                       // wait for a second
-  digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
-  delay(100);                       // wait for a second
-}
     
     for (int p=0;p<num_params;p++) {
       Serial.print("param ");
@@ -495,43 +494,11 @@ for (int k=0;k<3;k++) {
       Serial.println(params[p]);
     }
     Serial.println();
-
-    //float temp = dht.readTemperature();
-        //float humidity = dht.readHumidity();
-        //float temp = 24.5;
-        //float humidity = 33.;
-
-        //static uint8_t payload[2*num_params];
-
-        /*
-        for (int pi=0;pi<num_params;pi++) {
-        //Serial.print("pi=");
-        //Serial.println(pi);
-        //Serial.println(params[pi]);
-        int pj=pi*2;
-        //Serial.println(pj);
-        
-        float p = params[pi] / decoder_divider;
-        uint16_t paramPayload = LMIC_f2sflt16(p);
-        byte p_low = lowByte(paramPayload);
-        byte p_high = highByte(paramPayload);
-        
-        payload[pj]=p_low;
-        payload[pj+1]=p_high;
-        }
-*/
-
-        //Serial.print("Size of payload = ");
-        //Serial.println(sizeof(payload));
-        
-        //LMIC_setTxData2(1, message.getBytes(), sizeof(message.getBytes()), 0);
-        //LMIC_setTxData2(1, payload,sizeof(payload), 1);
         
   lpp.reset();
-  lpp.addTemperature(1, params[1]);
-  //lpp.addHumidity(2,32.3);
-  //lpp.addBarometricPressure(2, 1073.21);
-  //lpp.addGPS(3, 52.37365, 4.88650, 2);
+  lpp.addRelativeHumidity(1,params[0]); // volumetric water content from Acclima
+  lpp.addTemperature(2, params[1]); // acclima soil temperature
+  lpp.addAnalogInput(3, measuredvbat); // voltage
 
   
         // Prepare upstream data transmission at the next possible time.
