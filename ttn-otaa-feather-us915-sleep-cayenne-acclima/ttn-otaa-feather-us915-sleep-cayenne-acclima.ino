@@ -48,7 +48,7 @@
 
 #define decoder_divider 5000
 
-#define VBATPIN A7
+#define VBATPIN A0
 
 #define SENSOR_FOUND_PIN A1
 #define JOIN_PIN A2
