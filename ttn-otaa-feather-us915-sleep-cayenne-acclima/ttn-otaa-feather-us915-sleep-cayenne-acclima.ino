@@ -50,10 +50,11 @@
 
 #define VBATPIN A0
 
-#define SENSOR_FOUND_PIN A1
-#define JOIN_PIN A2
-#define TRANSMIT_PIN A3
-#define SLEEP_PIN A4
+#define STARTUP_PIN A1
+#define SENSOR_FOUND_PIN A2
+#define JOIN_PIN A3
+#define TRANSMIT_PIN A4
+#define SLEEP_PIN A5
 
 #define RTC_SLEEP 0 // whether to sleep or not
 
@@ -423,7 +424,10 @@ void onEvent (ev_t ev) {
             digitalWrite(SENSOR_FOUND_PIN,LOW);
             pinMode(TRANSMIT_PIN,OUTPUT);
             digitalWrite(TRANSMIT_PIN,LOW);
-
+            
+            pinMode(STARTUP_PIN,OUTPUT);
+            digitalWrite(STARTUP_PIN,LOW);
+  
              pinMode(SLEEP_PIN,OUTPUT);
             digitalWrite(SLEEP_PIN,HIGH);
 
@@ -489,6 +493,9 @@ void onEvent (ev_t ev) {
 
 void do_send(osjob_t* j){
 
+ pinMode(STARTUP_PIN,OUTPUT);
+  digitalWrite(STARTUP_PIN,HIGH);
+  
 pinMode(SLEEP_PIN,OUTPUT);
   digitalWrite(SLEEP_PIN,LOW);
   
@@ -635,6 +642,10 @@ if (RTC_SLEEP) {
 
 void setup() {
 
+  //pinMode(LED_BUILTIN,OUTPUT);
+  //digitalWrite(LED_BUILTIN,LOW);
+  pinMode(STARTUP_PIN,OUTPUT);
+  digitalWrite(STARTUP_PIN,LOW);
   pinMode(JOIN_PIN,OUTPUT);
   digitalWrite(JOIN_PIN,LOW);
   pinMode(SENSOR_FOUND_PIN,OUTPUT);
