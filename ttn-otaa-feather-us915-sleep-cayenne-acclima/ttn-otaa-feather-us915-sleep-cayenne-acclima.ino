@@ -50,6 +50,11 @@
 
 #define VBATPIN A7
 
+#define SENSOR_FOUND_PIN A1
+#define JOIN_PIN A2
+#define TRANSMIT_PIN A3
+#define SLEEP_PIN A4
+
 #define RTC_SLEEP 0 // whether to sleep or not
 
 int sdi_status = 0; // status of sdi_sensor;  0=no sensor found; 1=sensor found
@@ -347,6 +352,8 @@ void onEvent (ev_t ev) {
             Serial.println(F("EV_JOINING"));
             break;
         case EV_JOINED:
+            pinMode(JOIN_PIN,OUTPUT);
+            digitalWrite(JOIN_PIN,HIGH);
             Serial.println(F("EV_JOINED"));
             {
               u4_t netid = 0;
@@ -406,7 +413,21 @@ void onEvent (ev_t ev) {
 
             Serial.flush();
 
+            pinMode(TRANSMIT_PIN,OUTPUT);
+            digitalWrite(TRANSMIT_PIN,HIGH);
 
+            delay(500);
+            //pinMode(JOIN_PIN,OUTPUT);
+            //digitalWrite(JOIN_PIN,LOW);
+            pinMode(SENSOR_FOUND_PIN,OUTPUT);
+            digitalWrite(SENSOR_FOUND_PIN,LOW);
+            pinMode(TRANSMIT_PIN,OUTPUT);
+            digitalWrite(TRANSMIT_PIN,LOW);
+
+             pinMode(SLEEP_PIN,OUTPUT);
+            digitalWrite(SLEEP_PIN,HIGH);
+
+  
             if(RTC_SLEEP) {
 
             // Sleep for a period of TX_INTERVAL using single shot alarm
@@ -467,6 +488,10 @@ void onEvent (ev_t ev) {
 }
 
 void do_send(osjob_t* j){
+
+pinMode(SLEEP_PIN,OUTPUT);
+  digitalWrite(SLEEP_PIN,LOW);
+  
     // Check if there is not a current TX/RX job running
     if (LMIC.opmode & OP_TXRXPEND) {
         Serial.println(F("OP_TXRXPEND, not sending"));
@@ -521,10 +546,15 @@ Serial.println("Opening SDI-12 bus...");
     }
   }
 
+
+pinMode(SENSOR_FOUND_PIN,OUTPUT);
+
   if(!found) {
     Serial.println("No sensors found, please check connections and restart the Arduino.");
-    //while(true);
+    digitalWrite(SENSOR_FOUND_PIN,LOW);
   } // stop here
+   digitalWrite(SENSOR_FOUND_PIN,HIGH);
+
 
   
   // scan address space 0-9
@@ -557,7 +587,8 @@ Serial.println("Opening SDI-12 bus...");
     Serial.println();
   };
   
-  delay(3000);
+  //delay(3000);
+  
   for (int i =0;i<num_params;i++) {
     Serial.print("params ");
     Serial.print(i);
@@ -579,7 +610,7 @@ Serial.println("Opening SDI-12 bus...");
     }
     // Next TX is scheduled after TX_COMPLETE event.
 
-    
+/*
 if (RTC_SLEEP) {
     pinMode(0,INPUT_PULLUP);
     pinMode(1,INPUT_PULLUP);
@@ -597,13 +628,22 @@ if (RTC_SLEEP) {
     pinMode(12,INPUT_PULLUP);
     pinMode(13,INPUT_PULLUP);
 }
+*/
    // pinMode(10,INPUT);
 
 }
 
 void setup() {
 
-  
+  pinMode(JOIN_PIN,OUTPUT);
+  digitalWrite(JOIN_PIN,LOW);
+  pinMode(SENSOR_FOUND_PIN,OUTPUT);
+  digitalWrite(SENSOR_FOUND_PIN,LOW);
+  pinMode(TRANSMIT_PIN,OUTPUT);
+  digitalWrite(TRANSMIT_PIN,LOW);
+  pinMode(SLEEP_PIN,OUTPUT);
+  digitalWrite(SLEEP_PIN,LOW);
+            
     Serial.begin(9600);
     Serial.println(F("Starting"));
 
