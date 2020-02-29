@@ -222,7 +222,7 @@ void takeMeasurement(char i){
   command += "D0!"; // SDI-12 command to get data [address][D][dataOption][!]
   mySDI12.sendCommand(command);
 
-  Serial.println("waiting for acknolwedgement ...");
+  //Serial.println("waiting for acknolwedgement ...");
 
   
 
@@ -611,14 +611,9 @@ Serial.println("Opening SDI-12 bus...");
     //while(true);
     sdi_status=0;
   } // stop here
-
-  Serial.println();
-  Serial.println("Time Elapsed (s), Sensor Address and ID, Measurement 1, Measurement 2, ... etc.");
-  Serial.println("-------------------------------------------------------------------------------");
-  
-    
-mySDI12.begin();
-  delay(3000); // allow things to settle
+  else {
+        sdi_status=1;
+  }
   
   
 if (RTC_SLEEP) {
