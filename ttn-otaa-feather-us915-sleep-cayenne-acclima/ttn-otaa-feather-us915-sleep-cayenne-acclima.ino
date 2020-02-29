@@ -52,6 +52,7 @@
 
 #define RTC_SLEEP 0 // whether to sleep or not
 
+int sdi_status = 0; // status of sdi_sensor;  0=no sensor found; 1=sensor found
 
 //---------- ACCLIMA
 
@@ -61,6 +62,9 @@
 
 // Define the SDI-12 bus
 SDI12 mySDI12(DATA_PIN);
+
+String sdiResponse = "";
+String myCommand = "";
 
 // variable that alternates output type back and forth between parsed and raw
 boolean flip = 1;
@@ -220,7 +224,24 @@ void takeMeasurement(char i){
 
   Serial.println("waiting for acknolwedgement ...");
 
-  while(!(mySDI12.available()>1)){}  // wait for acknowlegement
+  
+
+  
+  while(!( mySDI12.available()>1) ) {} // wait for acknowlegement
+
+  //timerStart = millis();
+  //wait = 3; //number of seconds to wait for soil moisture sensor to respond
+  //while(!( mySDI12.available()>1) &&  (millis() - timerStart) < (1000 * wait)) {}  // wait for acknowlegement
+
+/*
+  if (!( mySDI12.available()>1)) {
+    sdi_status=0; // sensor isn't present / responding
+  }
+  else {
+    sdi_status=1; // sensor is present / responding
+  }
+  */
+  
   delay(300); // let the data transfer
   
   //printBufferToScreen();
@@ -480,13 +501,45 @@ Serial.print("VBat: " ); Serial.println(measuredvbat);
      
 // SDI-12 stuff
 
+// NOTE this only currently works for one sensor -- it scans for all sensors, and then whichever one is found is put in the params[] array
+
 char i = '0';
 
 Serial.println("trying SDI-12 ...");
 
-     printInfo(i);
-     takeMeasurement(i);
-    
+   //  printInfo(i);
+   //  takeMeasurement(i);
+     
+  // scan address space 0-9
+  for(char i = '0'; i <= '9'; i++) if(isTaken(i)){
+    Serial.print(millis()/1000);
+    Serial.print(",\t");
+    printInfo(i);
+    Serial.print(",\t");
+    takeMeasurement(i);
+    Serial.println();
+  }
+
+  // scan address space a-z
+  for(char i = 'a'; i <= 'z'; i++) if(isTaken(i)){
+    Serial.print(millis()/1000);
+    Serial.print(",\t");
+    printInfo(i);
+    Serial.print(",\t");
+    takeMeasurement(i);
+    Serial.println();
+  }
+
+  // scan address space A-Z
+  for(char i = 'A'; i <= 'Z'; i++) if(isTaken(i)){
+    Serial.print(millis()/1000);
+    Serial.print(",\t");
+    printInfo(i);
+    Serial.print(",\t");
+    takeMeasurement(i);
+    Serial.println();
+  };
+  
     for (int p=0;p<num_params;p++) {
       Serial.print("param ");
       Serial.print(p);
@@ -499,7 +552,7 @@ Serial.println("trying SDI-12 ...");
   lpp.addRelativeHumidity(1,params[0]); // volumetric water content from Acclima
   lpp.addTemperature(2, params[1]); // acclima soil temperature
   lpp.addAnalogInput(3, measuredvbat); // voltage
-
+  lpp.addAnalogInput(4,sdi_status); // sensor status:  0= no sensor found; 1=sensor found
   
         // Prepare upstream data transmission at the next possible time.
         //LMIC_setTxData2(1, mydata, sizeof(mydata)-1, 0);
@@ -511,13 +564,63 @@ Serial.println("trying SDI-12 ...");
 }
 
 void setup() {
-    delay(5000);
+    Serial.begin(9600);
+    Serial.println(F("Starting"));
 
-mySDI12.begin();
+Serial.println("Opening SDI-12 bus...");
+  mySDI12.begin();
   delay(500); // allow things to settle
-  
-    //pinMode(13, INPUT_PULLUP);
 
+  // Power the sensors;
+  if(POWER_PIN > 0){
+    Serial.println("Powering up sensors...");
+    pinMode(POWER_PIN, OUTPUT);
+    digitalWrite(POWER_PIN, HIGH);
+    delay(200);
+  }
+
+  Serial.println("Scanning all addresses, please wait...");
+  /*
+      Quickly Scan the Address Space
+   */
+
+  for(byte i = '0'; i <= '9'; i++) if(checkActive(i)) {numSensors++; setTaken(i);}   // scan address space 0-9
+
+  for(byte i = 'a'; i <= 'z'; i++) if(checkActive(i)) {numSensors++; setTaken(i);}   // scan address space a-z
+
+  for(byte i = 'A'; i <= 'Z'; i++) if(checkActive(i)) {numSensors++; setTaken(i);}   // scan address space A-Z
+
+  /*
+      See if there are any active sensors.
+   */
+  boolean found = false;
+
+  for(byte i = 0; i < 62; i++){
+    if(isTaken(i)){
+      found = true;
+      Serial.print("First address found:  ");
+      Serial.println(decToChar(i));
+      Serial.print("Total number of sensors found:  ");
+      Serial.println(numSensors);
+      break;
+    }
+  }
+
+  if(!found) {
+    Serial.println("No sensors found, please check connections and restart the Arduino.");
+    //while(true);
+    sdi_status=0;
+  } // stop here
+
+  Serial.println();
+  Serial.println("Time Elapsed (s), Sensor Address and ID, Measurement 1, Measurement 2, ... etc.");
+  Serial.println("-------------------------------------------------------------------------------");
+  
+    
+mySDI12.begin();
+  delay(3000); // allow things to settle
+  
+  
 if (RTC_SLEEP) {
     pinMode(0,INPUT_PULLUP);
     pinMode(1,INPUT_PULLUP);
@@ -540,8 +643,7 @@ if (RTC_SLEEP) {
 
 
     
-    Serial.begin(9600);
-    Serial.println(F("Starting"));
+
 
 if(RTC_SLEEP) {
       // Initialize RTC
