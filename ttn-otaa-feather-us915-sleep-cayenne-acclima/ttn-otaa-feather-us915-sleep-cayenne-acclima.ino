@@ -151,6 +151,13 @@ void printBufferToScreen(){
 
 }
 
+void resetParams() {
+      int param = 0;
+      while (param<num_params){
+          params[param]=-99.;
+          param++;
+        } 
+}
 
 void getParams(){
 
@@ -160,6 +167,7 @@ void getParams(){
     int param = 0;
     while(mySDI12.available()){
         float that = mySDI12.parseFloat();
+        Serial.println(that);
         if(that != mySDI12.TIMEOUT){    //check for timeout
           //float doubleThat = that * 2;
           params[param]=that;
@@ -229,11 +237,12 @@ void takeMeasurement(char i){
   
   while(!( mySDI12.available()>1) ) {} // wait for acknowlegement
 
-  //timerStart = millis();
-  //wait = 3; //number of seconds to wait for soil moisture sensor to respond
-  //while(!( mySDI12.available()>1) &&  (millis() - timerStart) < (1000 * wait)) {}  // wait for acknowlegement
-
 /*
+  timerStart = millis();
+  wait = 3; //number of seconds to wait for soil moisture sensor to respond
+  while(!( mySDI12.available()>1) &&  (millis() - timerStart) < (1000 * wait)) {}  // wait for acknowlegement
+
+
   if (!( mySDI12.available()>1)) {
     sdi_status=0; // sensor isn't present / responding
   }
@@ -502,6 +511,10 @@ Serial.print("VBat: " ); Serial.println(measuredvbat);
 // SDI-12 stuff
 
 // NOTE this only currently works for one sensor -- it scans for all sensors, and then whichever one is found is put in the params[] array
+
+// reset the params
+//resetParams();
+
 
 char i = '0';
 
