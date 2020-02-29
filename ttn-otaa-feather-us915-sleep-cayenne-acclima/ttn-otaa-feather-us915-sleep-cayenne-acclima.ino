@@ -110,45 +110,43 @@ char decToChar(byte i){
 // gets identification information from a sensor, and prints it to the serial port
 // expects a character between '0'-'9', 'a'-'z', or 'A'-'Z'.
 void printInfo(char i){
-  
-  Serial.println("printInfo ..");
-  
   String command = "";
   command += (char) i;
   command += "I!";
   mySDI12.sendCommand(command);
+  // Serial.print(">>>");
+  // Serial.println(command);
   delay(30);
 
-  while(mySDI12.available()){
-    char c = mySDI12.read();
-    if((c!='\n') && (c!='\r')) Serial.write(c);
-    delay(5);
-  }
+  printBufferToScreen();
 }
-
 void printBufferToScreen(){
-
-    mySDI12.read();  // discard address
-    int param = 0;
-    while(mySDI12.available()){
-        float that = mySDI12.parseFloat();
-        if(that != mySDI12.TIMEOUT){    //check for timeout
-          //float doubleThat = that * 2;
-          params[param]=that;
-          
-          Serial.print("\n");
-          Serial.print("param ");
-          Serial.print(param);
-          Serial.print(" = ");
-          Serial.println(that);
-          param++;
-          //Serial.print(" x 2 = ");
-          //Serial.print(doubleThat);
-        }
-      
+  Serial.println("printBuffer");
+  String buffer = "";
+  mySDI12.read(); // consume address
+  int item = 0;
+  while(mySDI12.available()){
+    
+  float that = mySDI12.parseFloat();
+  Serial.print(item);
+  Serial.print(":");
+  Serial.println(that);
+  params[item]=that;
+  item++;
+  delay(50);
+    /*
+    char c = mySDI12.read();
+    if(c == '+'){
+      buffer += ',';
     }
-    Serial.println();
-
+    else if ((c != '\n') && (c != '\r')) {
+      buffer += c;
+    }
+    delay(50);
+*/
+    
+  }
+ Serial.print(buffer);
 }
 
 void resetParams() {
@@ -159,6 +157,7 @@ void resetParams() {
         } 
 }
 
+/*
 void getParams(){
 
   Serial.println("get Params ..");
@@ -180,11 +179,9 @@ void getParams(){
     Serial.println();
 
 }
+*/
 
 void takeMeasurement(char i){
-
-    Serial.println("takeMeasurement ..");
-
   String command = "";
   command += i;
   command += "M!"; // SDI-12 measurement command format  [address]['M'][!]
@@ -229,33 +226,9 @@ void takeMeasurement(char i){
   command += i;
   command += "D0!"; // SDI-12 command to get data [address][D][dataOption][!]
   mySDI12.sendCommand(command);
-
-  //Serial.println("waiting for acknolwedgement ...");
-
-  
-
-  
-  while(!( mySDI12.available()>1) ) {} // wait for acknowlegement
-
-/*
-  timerStart = millis();
-  wait = 3; //number of seconds to wait for soil moisture sensor to respond
-  while(!( mySDI12.available()>1) &&  (millis() - timerStart) < (1000 * wait)) {}  // wait for acknowlegement
-
-
-  if (!( mySDI12.available()>1)) {
-    sdi_status=0; // sensor isn't present / responding
-  }
-  else {
-    sdi_status=1; // sensor is present / responding
-  }
-  */
-  
+  while(!(mySDI12.available()>1)){}  // wait for acknowlegement
   delay(300); // let the data transfer
-  
-  //printBufferToScreen();
-  getParams();
-  
+  printBufferToScreen();
   mySDI12.clearBuffer();
 }
 
@@ -509,77 +482,6 @@ Serial.print("VBat: " ); Serial.println(measuredvbat);
 
      
 // SDI-12 stuff
-
-// NOTE this only currently works for one sensor -- it scans for all sensors, and then whichever one is found is put in the params[] array
-
-// reset the params
-//resetParams();
-
-
-char i = '0';
-
-Serial.println("trying SDI-12 ...");
-
-   //  printInfo(i);
-   //  takeMeasurement(i);
-     
-  // scan address space 0-9
-  for(char i = '0'; i <= '9'; i++) if(isTaken(i)){
-    Serial.print(millis()/1000);
-    Serial.print(",\t");
-    printInfo(i);
-    Serial.print(",\t");
-    takeMeasurement(i);
-    Serial.println();
-  }
-
-  // scan address space a-z
-  for(char i = 'a'; i <= 'z'; i++) if(isTaken(i)){
-    Serial.print(millis()/1000);
-    Serial.print(",\t");
-    printInfo(i);
-    Serial.print(",\t");
-    takeMeasurement(i);
-    Serial.println();
-  }
-
-  // scan address space A-Z
-  for(char i = 'A'; i <= 'Z'; i++) if(isTaken(i)){
-    Serial.print(millis()/1000);
-    Serial.print(",\t");
-    printInfo(i);
-    Serial.print(",\t");
-    takeMeasurement(i);
-    Serial.println();
-  };
-  
-    for (int p=0;p<num_params;p++) {
-      Serial.print("param ");
-      Serial.print(p);
-      Serial.print(" = ");
-      Serial.println(params[p]);
-    }
-    Serial.println();
-        
-  lpp.reset();
-  lpp.addRelativeHumidity(1,params[0]); // volumetric water content from Acclima
-  lpp.addTemperature(2, params[1]); // acclima soil temperature
-  lpp.addAnalogInput(3, measuredvbat); // voltage
-  lpp.addAnalogInput(4,sdi_status); // sensor status:  0= no sensor found; 1=sensor found
-  
-        // Prepare upstream data transmission at the next possible time.
-        //LMIC_setTxData2(1, mydata, sizeof(mydata)-1, 0);
-   LMIC_setTxData2(1, lpp.getBuffer(), lpp.getSize(), 0);
-        
-        Serial.println(F("Packet queued"));
-    }
-    // Next TX is scheduled after TX_COMPLETE event.
-}
-
-void setup() {
-    Serial.begin(9600);
-    Serial.println(F("Starting"));
-
 Serial.println("Opening SDI-12 bus...");
   mySDI12.begin();
   delay(500); // allow things to settle
@@ -622,13 +524,62 @@ Serial.println("Opening SDI-12 bus...");
   if(!found) {
     Serial.println("No sensors found, please check connections and restart the Arduino.");
     //while(true);
-    sdi_status=0;
   } // stop here
-  else {
-        sdi_status=1;
+
+  
+  // scan address space 0-9
+  for(char i = '0'; i <= '9'; i++) if(isTaken(i)){
+    Serial.print(millis()/1000);
+    Serial.print(",\t");
+    printInfo(i);
+    Serial.print(",\t");
+    takeMeasurement(i);
+    Serial.println();
+  }
+
+  // scan address space a-z
+  for(char i = 'a'; i <= 'z'; i++) if(isTaken(i)){
+    Serial.print(millis()/1000);
+    Serial.print(",\t");
+    printInfo(i);
+    Serial.print(",\t");
+    takeMeasurement(i);
+    Serial.println();
+  }
+
+  // scan address space A-Z
+  for(char i = 'A'; i <= 'Z'; i++) if(isTaken(i)){
+    Serial.print(millis()/1000);
+    Serial.print(",\t");
+    printInfo(i);
+    Serial.print(",\t");
+    takeMeasurement(i);
+    Serial.println();
+  };
+  
+  delay(3000);
+  for (int i =0;i<num_params;i++) {
+    Serial.print("params ");
+    Serial.print(i);
+    Serial.print(" =");
+    Serial.println(params[i]);
   }
   
+  lpp.reset();
+  lpp.addRelativeHumidity(1,params[0]); // volumetric water content from Acclima
+  lpp.addTemperature(2, params[1]); // acclima soil temperature
+  lpp.addAnalogInput(3, measuredvbat); // voltage
+  lpp.addAnalogInput(4,sdi_status); // sensor status:  0= no sensor found; 1=sensor found
   
+        // Prepare upstream data transmission at the next possible time.
+        //LMIC_setTxData2(1, mydata, sizeof(mydata)-1, 0);
+   LMIC_setTxData2(1, lpp.getBuffer(), lpp.getSize(), 0);
+        
+        Serial.println(F("Packet queued"));
+    }
+    // Next TX is scheduled after TX_COMPLETE event.
+
+    
 if (RTC_SLEEP) {
     pinMode(0,INPUT_PULLUP);
     pinMode(1,INPUT_PULLUP);
@@ -648,11 +599,16 @@ if (RTC_SLEEP) {
 }
    // pinMode(10,INPUT);
 
+}
 
+void setup() {
 
-    
+  
+    Serial.begin(9600);
+    Serial.println(F("Starting"));
 
-
+  
+   
 if(RTC_SLEEP) {
       // Initialize RTC
     rtc.begin();
