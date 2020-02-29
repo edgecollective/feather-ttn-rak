@@ -56,7 +56,7 @@
 #define TRANSMIT_PIN A4
 #define SLEEP_PIN A5
 
-#define RTC_SLEEP 0 // whether to sleep or not
+#define RTC_SLEEP 1 // whether to sleep or not
 
 int sdi_status = 0; // status of sdi_sensor;  0=no sensor found; 1=sensor found
 
@@ -441,17 +441,41 @@ void onEvent (ev_t ev) {
             
             // USB port consumes extra current
             USBDevice.detach();
-           
+
+             pinMode(STARTUP_PIN,OUTPUT);
+            digitalWrite(STARTUP_PIN,LOW);
+            
             // Enter sleep mode
             rtc.standbyMode();
-            
+
+            // we are in 'startup' when we are not in standbymode
+              pinMode(STARTUP_PIN,OUTPUT);
+            digitalWrite(STARTUP_PIN,HIGH);
+             // we are in 'startup' when we are not in standbymode
+              pinMode(SLEEP_PIN,OUTPUT);
+            digitalWrite(SLEEP_PIN,LOW);
+           
             
             // Reinitialize USB for debugging
             USBDevice.init();
             USBDevice.attach();
             }
             else{
+              
+             pinMode(STARTUP_PIN,OUTPUT);
+            digitalWrite(STARTUP_PIN,LOW);
+            
+            
+            
             delay(TX_INTERVAL); // if not entering standby mode, do this
+
+            
+             pinMode(STARTUP_PIN,OUTPUT);
+            digitalWrite(STARTUP_PIN,HIGH);
+            
+            pinMode(SLEEP_PIN,OUTPUT);
+            digitalWrite(SLEEP_PIN,LOW);
+            
             }
             
             os_setTimedCallback(&sendjob, os_getTime()+sec2osticks(TX_INTERVAL), do_send);
@@ -494,7 +518,7 @@ void onEvent (ev_t ev) {
 void do_send(osjob_t* j){
 
  pinMode(STARTUP_PIN,OUTPUT);
-  digitalWrite(STARTUP_PIN,HIGH);
+            digitalWrite(STARTUP_PIN,HIGH);
   
 pinMode(SLEEP_PIN,OUTPUT);
   digitalWrite(SLEEP_PIN,LOW);
@@ -642,6 +666,9 @@ if (RTC_SLEEP) {
 
 void setup() {
 
+pinMode(STARTUP_PIN,OUTPUT);
+            digitalWrite(STARTUP_PIN,HIGH);
+            
   //pinMode(LED_BUILTIN,OUTPUT);
   //digitalWrite(LED_BUILTIN,LOW);
   pinMode(STARTUP_PIN,OUTPUT);
