@@ -50,11 +50,11 @@
 
 #define VBATPIN A0
 
-#define STARTUP_PIN A1
-#define SENSOR_FOUND_PIN A2
-#define JOIN_PIN A3
-#define TRANSMIT_PIN A4
-#define SLEEP_PIN A5
+#define STARTUP_PIN 12
+#define SENSOR_FOUND_PIN 11
+#define JOIN_PIN 9
+#define TRANSMIT_PIN A2
+#define SLEEP_PIN 5
 
 #define RTC_SLEEP 1 // whether to sleep or not
 
@@ -444,6 +444,8 @@ void onEvent (ev_t ev) {
 
              pinMode(STARTUP_PIN,OUTPUT);
             digitalWrite(STARTUP_PIN,LOW);
+            pinMode(SLEEP_PIN,OUTPUT);
+            digitalWrite(SLEEP_PIN,HIGH);
             
             // Enter sleep mode
             rtc.standbyMode();
