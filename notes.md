@@ -36,4 +36,8 @@ not sure if there are unknown issues with arduinolowpower -- might make more sen
 
 so might just add that fix
 
+specifically:  i think we can just use this person's fork of the RTC library:
+
+https://github.com/sslupsky/RTCZero/tree/fix-lockup-when-wake-from-sleep
+
 
