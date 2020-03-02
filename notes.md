@@ -12,4 +12,10 @@ https://forum.arduino.cc/index.php?topic=617395.15
 
 RTCZero hasn't merged the patch, but ArduinoLowPower has -- ?
 
+https://github.com/arduino-libraries/RTCZero/pull/46
+
+they say that arduinolowpower has resolved this issue
+
+i believe (not sure) that the current issue with rtczero simply resets the hardware, so it's not too problematic at this point -- it just means that there will be a join 
+
 
