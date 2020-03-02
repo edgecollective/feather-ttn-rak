@@ -16,7 +16,7 @@
 
 ### Arduino Libraries
 
-- [Latest version of RTCZero](https://github.com/arduino-libraries/RTCZero)
+- [Fork of RTCZero that fixes 'lockup' issue](https://github.com/sslupsky/RTCZero/tree/fix-lockup-when-wake-from-sleep).  Note that 'main' repo is [here](https://github.com/arduino-libraries/RTCZero), but they haven't merged the relevant fork / pull request.
 - [Latest verison of CayenneLPP](https://github.com/ElectronicCats/CayenneLPP)
 - [Latest version of ArduinoJson](https://github.com/bblanchon/ArduinoJson)
 - [Version 2.3.2 of arduino-lmic](https://github.com/mcci-catena/arduino-lmic/releases/tag/v2.3.2)
