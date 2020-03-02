@@ -10,4 +10,6 @@ also this re: RTCZero library and SysTick:
 
 https://forum.arduino.cc/index.php?topic=617395.15
 
+RTCZero hasn't merged the patch, but ArduinoLowPower has -- ?
+
 
