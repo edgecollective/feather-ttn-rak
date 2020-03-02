@@ -26,4 +26,14 @@ i believe that i did see this issue happen when looking at the hardware -- i tho
 looks like we can change the code to 'pull down' the leds when in sleep, so that might work for pin13 ... but likely not for the charging LED ... should look at the charging circuit ... is it powered by USB? can we use BAT instead? maybe not a problem to use BAT b/c the charging chip won't be powered when the USB is off?  need to double check this -- can re-mill a board if useful ... can also test differential power consumption with present board by just jumping pins i think 
 
 
+this is the library that they were referencing, which at first glance looks good:
+
+https://github.com/arduino-libraries/ArduinoLowPower
+
+specifically, this: https://github.com/arduino-libraries/ArduinoLowPower/blob/master/examples/TimedWakeup/TimedWakeup.ino
+
+not sure if there are unknown issues with arduinolowpower -- might make more sense to use the pull request fix 
+
+so might just add that fix
+
 
