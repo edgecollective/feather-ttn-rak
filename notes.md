@@ -6,4 +6,8 @@ see in that thread:
 
 > The solution for the customer is to disable SysTick interrupt before going to sleep and enable it back after the sleep.
 
+also this re: RTCZero library and SysTick:
+
+https://forum.arduino.cc/index.php?topic=617395.15
+
 
