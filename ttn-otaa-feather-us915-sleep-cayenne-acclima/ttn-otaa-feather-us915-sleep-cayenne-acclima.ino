@@ -46,13 +46,6 @@
 #include <ArduinoJson.h> // https://github.com/bblanchon/ArduinoJson
 #include <SDI12.h>
 
-#define SHORT_SLEEP_INTERVAL 30 //seconds
-#define LONG_SLEEP_INTERVAL 60 //seconds
-
-#define RTC_SLEEP 1 // 1: sleep using RTC; 0: sleep using 'delay'
-
-#define SLIDER_PIN A1
-
 #define VBATPIN A0
 
 #define STARTUP_PIN 12
@@ -60,6 +53,12 @@
 #define JOIN_PIN 9
 #define TRANSMIT_PIN A2 // this is implemented w/ magnet wire in v2 of hardware, needs to be redone
 #define SLEEP_PIN 5
+
+#define SLIDER_PIN A1
+
+
+
+#define RTC_SLEEP 1 // whether to sleep or not
 
 int sdi_status = 0; // status of sdi_sensor;  0=no sensor found; 1=sensor found
 
@@ -324,7 +323,10 @@ static osjob_t sendjob;
 
 // Schedule TX every this many seconds (might become longer due to duty
 // cycle limitations).
-const unsigned TX_INTERVAL = 300;
+//const 
+unsigned TX_INTERVAL = 30;
+unsigned SHORT_SLEEP_INTERVAL = 30;
+unsigned LONG_SLEEP_INTERVAL = 300;
 
 const lmic_pinmap lmic_pins = {
     .nss = 8,
@@ -415,9 +417,9 @@ void onEvent (ev_t ev) {
             }
             // Schedule next transmission
 
-            Serial.flush();
+            
 
-
+/*
             // get the status of the slider pin to decide sleep interval
             int sliderState = digitalRead(pushButton);
             
@@ -427,10 +429,8 @@ void onEvent (ev_t ev) {
             else {
               TX_INTERVAL = LONG_SLEEP_INTERVAL;
             }
-
-            Serial.print("TX_INTERVAL=");
-            Serial.println(TX_INTERVAL);
-            
+ */
+          
             pinMode(TRANSMIT_PIN,OUTPUT);
             digitalWrite(TRANSMIT_PIN,HIGH);
 
@@ -448,7 +448,11 @@ void onEvent (ev_t ev) {
              pinMode(SLEEP_PIN,OUTPUT);
             digitalWrite(SLEEP_PIN,HIGH);
 
-  
+
+
+            Serial.print("TX_INTERVAL:");
+            Serial.println(TX_INTERVAL);
+            
             if(RTC_SLEEP) {
 
             // Sleep for a period of TX_INTERVAL using single shot alarm
@@ -686,6 +690,14 @@ if (RTC_SLEEP) {
 void setup() {
 
   pinMode(SLIDER_PIN, INPUT); // set up the slide switch pin 
+
+  int SWITCH_STATUS=digitalRead(SLIDER_PIN);
+  if (SWITCH_STATUS) {
+    TX_INTERVAL=SHORT_SLEEP_INTERVAL;
+  }
+  else {
+    TX_INTERVAL=LONG_SLEEP_INTERVAL;
+  }
 
   
 pinMode(STARTUP_PIN,OUTPUT);
