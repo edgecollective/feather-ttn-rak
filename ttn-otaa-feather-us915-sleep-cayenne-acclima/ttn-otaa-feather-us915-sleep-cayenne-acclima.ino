@@ -60,10 +60,11 @@ unsigned LONG_SLEEP_INTERVAL = 60;
 #define VBATPIN A0
 
 
-#define SLEEPING A2
+
+#define JOINED A2
 #define TRANSMITTED 9
-#define JOIN 11
-#define SENSORS_READ_PIN 12
+#define SENSORS_READ 11
+#define READING_SENSORS 12
 #define AWAKE 13
 
 
@@ -365,8 +366,8 @@ void onEvent (ev_t ev) {
             break;
         case EV_JOINED:
         
-            pinMode(JOIN,OUTPUT);
-            digitalWrite(JOIN,HIGH);
+            pinMode(JOINED,OUTPUT);
+            digitalWrite(JOINED,HIGH);
             
             Serial.println(F("EV_JOINED"));
             {
@@ -409,9 +410,13 @@ void onEvent (ev_t ev) {
         */
         case EV_JOIN_FAILED:
             Serial.println(F("EV_JOIN_FAILED"));
+             pinMode(JOINED,INPUT_PULLDOWN);
+
             break;
         case EV_REJOIN_FAILED:
             Serial.println(F("EV_REJOIN_FAILED"));
+            pinMode(JOINED,INPUT_PULLDOWN);
+
             break;
             break;
         case EV_TXCOMPLETE:
@@ -447,9 +452,6 @@ void onEvent (ev_t ev) {
             digitalWrite(TRANSMITTED,HIGH);
 
             pinMode(AWAKE,INPUT_PULLDOWN);
-
-            pinMode(SLEEPING,OUTPUT);
-            digitalWrite(SLEEPING,HIGH);
             
             if(RTC_SLEEP) {
 
@@ -470,14 +472,26 @@ void onEvent (ev_t ev) {
             USBDevice.init();
             USBDevice.attach();
 
-     
+            //now we're awake again
+            
+            //pulldown_pins();
+            pinMode(AWAKE,OUTPUT);
+            digitalWrite(AWAKE,HIGH);
+            pinMode(TRANSMITTED,INPUT_PULLDOWN);
+            pinMode(SENSORS_READ,INPUT_PULLDOWN);
+
+
             }
             else{
         
             
-            delay(TX_INTERVAL); // if not entering standby mode, do this
+            delay(TX_INTERVAL*1000); // if not entering standby mode, do this
 
-    
+            //pulldown_pins();
+            pinMode(AWAKE,OUTPUT);
+            digitalWrite(AWAKE,HIGH);
+            pinMode(TRANSMITTED,INPUT_PULLDOWN);
+            pinMode(SENSORS_READ,INPUT_PULLDOWN);
             
             }
             
@@ -496,6 +510,7 @@ void onEvent (ev_t ev) {
             break;
         case EV_LINK_DEAD:
             Serial.println(F("EV_LINK_DEAD"));
+             pinMode(JOINED,INPUT_PULLDOWN);
             break;
         case EV_LINK_ALIVE:
             Serial.println(F("EV_LINK_ALIVE"));
@@ -521,12 +536,18 @@ void onEvent (ev_t ev) {
 void do_send(osjob_t* j){
 
   
+    pinMode(SENSORS_READ,INPUT_PULLDOWN);
+    pinMode(TRANSMITTED,INPUT_PULLDOWN);
+
+  
     // Check if there is not a current TX/RX job running
     if (LMIC.opmode & OP_TXRXPEND) {
         Serial.println(F("OP_TXRXPEND, not sending"));
     } else {
 
-
+ pinMode(READING_SENSORS,OUTPUT);
+  digitalWrite(READING_SENSORS,HIGH);
+  
 // read the battery voltage
     float measuredvbat = analogRead(VBATPIN);
 measuredvbat *= 2;    // we divided by 2, so multiply back
@@ -625,8 +646,11 @@ Serial.println("Opening SDI-12 bus...");
     Serial.println(params[i]);
   }
 
-  pinMode(SENSORS_READ_PIN,OUTPUT);
-  digitalWrite(SENSORS_READ_PIN,HIGH);
+
+ pinMode(READING_SENSORS,INPUT_PULLDOWN);
+ 
+  pinMode(SENSORS_READ,OUTPUT);
+  digitalWrite(SENSORS_READ,HIGH);
   
   lpp.reset();
 
@@ -672,10 +696,11 @@ if (RTC_SLEEP) {
 
 void pulldown_pins() {
 
-pinMode(SLEEPING,INPUT_PULLDOWN);
+//pinMode(SLEEPING,INPUT_PULLDOWN);
 pinMode(TRANSMITTED,INPUT_PULLDOWN);
-pinMode(JOIN,INPUT_PULLDOWN);
-pinMode(SENSORS_READ_PIN,INPUT_PULLDOWN);
+pinMode(JOINED,INPUT_PULLDOWN);
+pinMode(SENSORS_READ,INPUT_PULLDOWN);
+pinMode(READING_SENSORS,INPUT_PULLDOWN);
 pinMode(AWAKE,INPUT_PULLDOWN);
 
 }
