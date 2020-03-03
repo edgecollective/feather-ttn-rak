@@ -551,13 +551,6 @@ pinMode(SLEEP_PIN,OUTPUT);
     } else {
 
 
-int SWITCH_STATUS=digitalRead(SLIDER_PIN);
-  if (SWITCH_STATUS) {
-    TX_INTERVAL=SHORT_SLEEP_INTERVAL;
-  }
-  else {
-    TX_INTERVAL=LONG_SLEEP_INTERVAL;
-  }
 // read the battery voltage
     float measuredvbat = analogRead(VBATPIN);
 measuredvbat *= 2;    // we divided by 2, so multiply back
@@ -695,8 +688,18 @@ if (RTC_SLEEP) {
 
 void setup() {
 
+// set the sleep interval TX_INTERVAL based on the slide switch
+// left = high = short, right = low = long
+
   pinMode(SLIDER_PIN, INPUT); // set up the slide switch pin 
 
+int SWITCH_STATUS=digitalRead(SLIDER_PIN);
+  if (SWITCH_STATUS) {
+    TX_INTERVAL=SHORT_SLEEP_INTERVAL;
+  }
+  else {
+    TX_INTERVAL=LONG_SLEEP_INTERVAL;
+  }
   
 
   
