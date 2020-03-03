@@ -46,6 +46,17 @@
 #include <ArduinoJson.h> // https://github.com/bblanchon/ArduinoJson
 #include <SDI12.h>
 
+
+// Schedule TX every this many seconds (might become longer due to duty
+// cycle limitations).
+//const 
+unsigned TX_INTERVAL = 30; //default
+unsigned SHORT_SLEEP_INTERVAL = 30;
+unsigned LONG_SLEEP_INTERVAL = 60;
+
+
+#define RTC_SLEEP 0 // 1: use RTC to deep sleep; 0: use delay to wait
+
 #define VBATPIN A0
 
 #define STARTUP_PIN 12
@@ -55,9 +66,6 @@
 #define SLEEP_PIN 5
 
 #define SLIDER_PIN A1
-
-
-#define RTC_SLEEP 1 // whether to sleep or not
 
 int sdi_status = 0; // status of sdi_sensor;  0=no sensor found; 1=sensor found
 
@@ -320,12 +328,7 @@ void os_getDevKey (u1_t* buf) {  memcpy_P(buf, APPKEY, 16);}
 static uint8_t mydata[] = "Hello, world!";
 static osjob_t sendjob;
 
-// Schedule TX every this many seconds (might become longer due to duty
-// cycle limitations).
-//const 
-unsigned TX_INTERVAL = 30;
-unsigned SHORT_SLEEP_INTERVAL = 30;
-unsigned LONG_SLEEP_INTERVAL = 300;
+
 
 const lmic_pinmap lmic_pins = {
     .nss = 8,
@@ -650,10 +653,15 @@ pinMode(SENSOR_FOUND_PIN,OUTPUT);
   }
   
   lpp.reset();
-  lpp.addRelativeHumidity(1,params[0]); // volumetric water content from Acclima
-  lpp.addTemperature(2, params[1]); // acclima soil temperature
-  lpp.addAnalogInput(3, measuredvbat); // voltage
-  lpp.addAnalogInput(4,sdi_status); // sensor status:  0= no sensor found; 1=sensor found
+
+  lpp.addTemperature(1, params[0]); // vwc
+  lpp.addTemperature(2, params[1]); // temp
+  lpp.addTemperature(3, params[2]); // permittivity
+  lpp.addTemperature(4, params[3]); // bulk EC
+  lpp.addTemperature(5, params[4]/10.); // pore EC
+
+  lpp.addAnalogInput(6, measuredvbat); // voltage
+  lpp.addAnalogInput(7,sdi_status); // sensor status:  0= no sensor found; 1=sensor found
   
         // Prepare upstream data transmission at the next possible time.
         //LMIC_setTxData2(1, mydata, sizeof(mydata)-1, 0);
