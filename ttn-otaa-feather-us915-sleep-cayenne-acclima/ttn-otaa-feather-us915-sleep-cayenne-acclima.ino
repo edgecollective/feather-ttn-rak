@@ -59,11 +59,15 @@ unsigned LONG_SLEEP_INTERVAL = 60;
 
 #define VBATPIN A0
 
-#define STARTUP_PIN 12
-#define SENSOR_FOUND_PIN 11
-#define JOIN_PIN 9
-#define TRANSMIT_PIN A2 // this is implemented w/ magnet wire in v2 of hardware, needs to be redone
-#define SLEEP_PIN 5
+
+#define SLEEPING A2
+#define TRANSMITTED 9
+#define JOIN 11
+#define SENSORS_READ_PIN 12
+#define AWAKE 13
+
+
+// control the sleep interval
 
 #define SLIDER_PIN A1
 
@@ -360,8 +364,10 @@ void onEvent (ev_t ev) {
             Serial.println(F("EV_JOINING"));
             break;
         case EV_JOINED:
-            pinMode(JOIN_PIN,OUTPUT);
-            digitalWrite(JOIN_PIN,HIGH);
+        
+            pinMode(JOIN,OUTPUT);
+            digitalWrite(JOIN,HIGH);
+            
             Serial.println(F("EV_JOINED"));
             {
               u4_t netid = 0;
@@ -433,27 +439,17 @@ void onEvent (ev_t ev) {
             }
  */
           
-            pinMode(TRANSMIT_PIN,OUTPUT);
-            digitalWrite(TRANSMIT_PIN,HIGH);
-
-            delay(500);
-            //pinMode(JOIN_PIN,OUTPUT);
-            //digitalWrite(JOIN_PIN,LOW);
-            pinMode(SENSOR_FOUND_PIN,OUTPUT);
-            digitalWrite(SENSOR_FOUND_PIN,LOW);
-            pinMode(TRANSMIT_PIN,OUTPUT);
-            digitalWrite(TRANSMIT_PIN,LOW);
-            
-            pinMode(STARTUP_PIN,OUTPUT);
-            digitalWrite(STARTUP_PIN,LOW);
-  
-             pinMode(SLEEP_PIN,OUTPUT);
-            digitalWrite(SLEEP_PIN,HIGH);
-
-
-
             Serial.print("TX_INTERVAL:");
             Serial.println(TX_INTERVAL);
+
+
+            pinMode(TRANSMITTED,OUTPUT);
+            digitalWrite(TRANSMITTED,HIGH);
+
+            pinMode(AWAKE,INPUT_PULLDOWN);
+
+            pinMode(SLEEPING,OUTPUT);
+            digitalWrite(SLEEPING,HIGH);
             
             if(RTC_SLEEP) {
 
@@ -465,41 +461,23 @@ void onEvent (ev_t ev) {
             // USB port consumes extra current
             USBDevice.detach();
 
-             pinMode(STARTUP_PIN,OUTPUT);
-            digitalWrite(STARTUP_PIN,LOW);
-            pinMode(SLEEP_PIN,OUTPUT);
-            digitalWrite(SLEEP_PIN,HIGH);
             
             // Enter sleep mode
             rtc.standbyMode();
 
-            // we are in 'startup' when we are not in standbymode
-              pinMode(STARTUP_PIN,OUTPUT);
-            digitalWrite(STARTUP_PIN,HIGH);
-             // we are in 'startup' when we are not in standbymode
-              pinMode(SLEEP_PIN,OUTPUT);
-            digitalWrite(SLEEP_PIN,LOW);
-           
             
             // Reinitialize USB for debugging
             USBDevice.init();
             USBDevice.attach();
+
+     
             }
             else{
-              
-             pinMode(STARTUP_PIN,OUTPUT);
-            digitalWrite(STARTUP_PIN,LOW);
-            
-            
+        
             
             delay(TX_INTERVAL); // if not entering standby mode, do this
 
-            
-             pinMode(STARTUP_PIN,OUTPUT);
-            digitalWrite(STARTUP_PIN,HIGH);
-            
-            pinMode(SLEEP_PIN,OUTPUT);
-            digitalWrite(SLEEP_PIN,LOW);
+    
             
             }
             
@@ -542,11 +520,6 @@ void onEvent (ev_t ev) {
 
 void do_send(osjob_t* j){
 
- pinMode(STARTUP_PIN,OUTPUT);
-            digitalWrite(STARTUP_PIN,HIGH);
-  
-pinMode(SLEEP_PIN,OUTPUT);
-  digitalWrite(SLEEP_PIN,LOW);
   
     // Check if there is not a current TX/RX job running
     if (LMIC.opmode & OP_TXRXPEND) {
@@ -603,13 +576,13 @@ Serial.println("Opening SDI-12 bus...");
   }
 
 
-pinMode(SENSOR_FOUND_PIN,OUTPUT);
+//pinMode(SENSOR_FOUND_PIN,OUTPUT);
 
   if(!found) {
     Serial.println("No sensors found, please check connections and restart the Arduino.");
-    digitalWrite(SENSOR_FOUND_PIN,LOW);
+    //digitalWrite(SENSOR_FOUND_PIN,LOW);
   } // stop here
-   digitalWrite(SENSOR_FOUND_PIN,HIGH);
+   //digitalWrite(SENSOR_FOUND_PIN,HIGH);
 
 
   
@@ -651,6 +624,9 @@ pinMode(SENSOR_FOUND_PIN,OUTPUT);
     Serial.print(" =");
     Serial.println(params[i]);
   }
+
+  pinMode(SENSORS_READ_PIN,OUTPUT);
+  digitalWrite(SENSORS_READ_PIN,HIGH);
   
   lpp.reset();
 
@@ -694,8 +670,23 @@ if (RTC_SLEEP) {
 
 }
 
+void pulldown_pins() {
+
+pinMode(SLEEPING,INPUT_PULLDOWN);
+pinMode(TRANSMITTED,INPUT_PULLDOWN);
+pinMode(JOIN,INPUT_PULLDOWN);
+pinMode(SENSORS_READ_PIN,INPUT_PULLDOWN);
+pinMode(AWAKE,INPUT_PULLDOWN);
+
+}
+
 void setup() {
 
+pulldown_pins();
+
+pinMode(AWAKE,OUTPUT);
+digitalWrite(AWAKE,HIGH);
+            
 // set the sleep interval TX_INTERVAL based on the slide switch
 // left = high = short, right = low = long
 
@@ -711,21 +702,6 @@ int SWITCH_STATUS=digitalRead(SLIDER_PIN);
   
 
   
-pinMode(STARTUP_PIN,OUTPUT);
-            digitalWrite(STARTUP_PIN,HIGH);
-            
-  //pinMode(LED_BUILTIN,OUTPUT);
-  //digitalWrite(LED_BUILTIN,LOW);
-  pinMode(STARTUP_PIN,OUTPUT);
-  digitalWrite(STARTUP_PIN,LOW);
-  pinMode(JOIN_PIN,OUTPUT);
-  digitalWrite(JOIN_PIN,LOW);
-  pinMode(SENSOR_FOUND_PIN,OUTPUT);
-  digitalWrite(SENSOR_FOUND_PIN,LOW);
-  pinMode(TRANSMIT_PIN,OUTPUT);
-  digitalWrite(TRANSMIT_PIN,LOW);
-  pinMode(SLEEP_PIN,OUTPUT);
-  digitalWrite(SLEEP_PIN,LOW);
             
     Serial.begin(9600);
     Serial.println(F("Starting"));
