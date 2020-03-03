@@ -57,7 +57,6 @@
 #define SLIDER_PIN A1
 
 
-
 #define RTC_SLEEP 1 // whether to sleep or not
 
 int sdi_status = 0; // status of sdi_sensor;  0=no sensor found; 1=sensor found
@@ -552,6 +551,13 @@ pinMode(SLEEP_PIN,OUTPUT);
     } else {
 
 
+int SWITCH_STATUS=digitalRead(SLIDER_PIN);
+  if (SWITCH_STATUS) {
+    TX_INTERVAL=SHORT_SLEEP_INTERVAL;
+  }
+  else {
+    TX_INTERVAL=LONG_SLEEP_INTERVAL;
+  }
 // read the battery voltage
     float measuredvbat = analogRead(VBATPIN);
 measuredvbat *= 2;    // we divided by 2, so multiply back
@@ -691,13 +697,7 @@ void setup() {
 
   pinMode(SLIDER_PIN, INPUT); // set up the slide switch pin 
 
-  int SWITCH_STATUS=digitalRead(SLIDER_PIN);
-  if (SWITCH_STATUS) {
-    TX_INTERVAL=SHORT_SLEEP_INTERVAL;
-  }
-  else {
-    TX_INTERVAL=LONG_SLEEP_INTERVAL;
-  }
+  
 
   
 pinMode(STARTUP_PIN,OUTPUT);
