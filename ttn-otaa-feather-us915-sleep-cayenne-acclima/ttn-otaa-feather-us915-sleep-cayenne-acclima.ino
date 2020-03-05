@@ -50,12 +50,14 @@
 // Schedule TX every this many seconds (might become longer due to duty
 // cycle limitations).
 //const 
-unsigned TX_INTERVAL = 30; //default
+unsigned TX_INTERVAL = 120; //default
+
 unsigned SHORT_SLEEP_INTERVAL = 30;
-unsigned LONG_SLEEP_INTERVAL = 60;
+//unsigned LONG_SLEEP_INTERVAL = 3600;
+unsigned LONG_SLEEP_INTERVAL = 240;
 
 
-#define RTC_SLEEP 0 // 1: use RTC to deep sleep; 0: use delay to wait
+#define RTC_SLEEP 1 // 1: use RTC to deep sleep; 0: use delay to wait
 
 #define VBATPIN A0
 
@@ -494,9 +496,12 @@ void onEvent (ev_t ev) {
             pinMode(SENSORS_READ,INPUT_PULLDOWN);
             
             }
-            
-            os_setTimedCallback(&sendjob, os_getTime()+sec2osticks(TX_INTERVAL), do_send);
+
+            os_setTimedCallback(&sendjob, os_getTime() + sec2osticks(1), do_send);
+
             //os_setTimedCallback(&sendjob, os_getTime()+sec2osticks(TX_INTERVAL), do_send);
+            //os_setTimedCallback(&sendjob, os_getTime()+sec2osticks(TX_INTERVAL), do_send);
+            
             break;
         case EV_LOST_TSYNC:
             Serial.println(F("EV_LOST_TSYNC"));
@@ -717,6 +722,7 @@ digitalWrite(AWAKE,HIGH);
 
   pinMode(SLIDER_PIN, INPUT); // set up the slide switch pin 
 
+/*
 int SWITCH_STATUS=digitalRead(SLIDER_PIN);
   if (SWITCH_STATUS) {
     TX_INTERVAL=SHORT_SLEEP_INTERVAL;
@@ -724,7 +730,7 @@ int SWITCH_STATUS=digitalRead(SLIDER_PIN);
   else {
     TX_INTERVAL=LONG_SLEEP_INTERVAL;
   }
-  
+  */
 
   
             
