@@ -55,7 +55,7 @@ unsigned TX_INTERVAL = 30; //default
 
 unsigned SHORT_SLEEP_INTERVAL = 30;
 //unsigned LONG_SLEEP_INTERVAL = 3600;
-unsigned LONG_SLEEP_INTERVAL = 240;
+unsigned LONG_SLEEP_INTERVAL = 300;
 
 
 #define RTC_SLEEP 1 // 1: use RTC to deep sleep; 0: use delay to wait
@@ -434,19 +434,6 @@ void onEvent (ev_t ev) {
             // Schedule next transmission
 
             
-
-/*
-            // get the status of the slider pin to decide sleep interval
-            int sliderState = digitalRead(pushButton);
-            
-            if (sliderState==1) {
-              TX_INTERVAL = SHORT_SLEEP_INTERVAL;
-            }
-            else {
-              TX_INTERVAL = LONG_SLEEP_INTERVAL;
-            }
- */
-          
             Serial.print("TX_INTERVAL:");
             Serial.println(TX_INTERVAL);
 
@@ -551,6 +538,20 @@ void do_send(osjob_t* j){
         Serial.println(F("OP_TXRXPEND, not sending"));
     } else {
 
+
+pinMode(SLIDER_PIN, INPUT); // set up the slide switch pin 
+            
+            int SWITCH_STATUS=digitalRead(SLIDER_PIN);
+            
+              if (SWITCH_STATUS) {
+                TX_INTERVAL=SHORT_SLEEP_INTERVAL;
+              }
+              else {
+                TX_INTERVAL=LONG_SLEEP_INTERVAL;
+              }
+
+
+             
  pinMode(READING_SENSORS,OUTPUT);
   digitalWrite(READING_SENSORS,HIGH);
   
