@@ -33,20 +33,16 @@
  *******************************************************************************/
 
 // NOTE: as of Feb 16 2020, release v2.3.2 of the mcci-catenda/arduino-lmic library works, but some later versions did not work. should test them.
-// v2.3.2 release is here: https://github.com/mcci-catena/arduino-lmic/releases/tag/v2.3.2
-
-//using cayenne: https://github.com/ElectronicCats/CayenneLPP
+// v2.3.2 release is here: https://github.com/mcci-catena/arduino-lmic/releases/tag/v2.3.2 (also referenced below)
 
 
-
-#include <lmic.h>
+#include <lmic.h>  // https://github.com/mcci-catena/arduino-lmic/releases/tag/v2.3.2
 #include <hal/hal.h>
 #include <SPI.h>
 #include "RTCZero.h" // https://github.com/arduino-libraries/RTCZero
 #include <CayenneLPP.h> // https://github.com/ElectronicCats/CayenneLPP
 #include <ArduinoJson.h> // https://github.com/bblanchon/ArduinoJson
-#include <SDI12.h>
-
+#include <SDI12.h> // https://github.com/EnviroDIY/Arduino-SDI-12
 
 // Schedule TX every this many seconds (might become longer due to duty
 // cycle limitations).
