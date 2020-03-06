@@ -51,11 +51,9 @@
 // Schedule TX every this many seconds (might become longer due to duty
 // cycle limitations).
 //const 
-unsigned TX_INTERVAL = 30; //default
-
-unsigned SHORT_SLEEP_INTERVAL = 30;
-//unsigned LONG_SLEEP_INTERVAL = 3600;
-unsigned LONG_SLEEP_INTERVAL = 300;
+unsigned TX_INTERVAL = 30; // seconds -- default
+unsigned SHORT_SLEEP_INTERVAL = 30; // seconds
+unsigned LONG_SLEEP_INTERVAL = 3600; // seconds
 
 
 #define RTC_SLEEP 1 // 1: use RTC to deep sleep; 0: use delay to wait
