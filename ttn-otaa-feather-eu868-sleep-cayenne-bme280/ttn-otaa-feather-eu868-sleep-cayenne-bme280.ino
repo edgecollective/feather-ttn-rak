@@ -38,6 +38,10 @@
 //using cayenne: https://github.com/ElectronicCats/CayenneLPP
 
 
+#include <Wire.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BME280.h>
+
 #include <lmic.h>
 #include <hal/hal.h>
 #include <SPI.h>
@@ -47,6 +51,11 @@
 
 #define RTC_SLEEP 0
 
+Adafruit_BME280 bme; // I2C
+unsigned long delayTime;
+
+ 
+    
 RTCZero rtc;
 CayenneLPP lpp(51);
 
@@ -64,7 +73,7 @@ void os_getDevEui (u1_t* buf) { memcpy_P(buf, DEVEUI, 8);}
 // This key should be in big endian format (or, since it is not really a
 // number but a block of memory, endianness does not really apply). In
 // practice, a key taken from the TTN console can be copied as-is.
-static const u1_t PROGMEM APPKEY[16] = { 0x58,0x0c,0x7a,0xc9,0x85,0x95,0x99,0xf2,0xca,0xcb,0x79,0x15,0x0a,0x45,0x6f,0x39 };
+static const u1_t PROGMEM APPKEY[16] = { 0xde,0x72,0xfb,0x63,0x1e,0xf6,0x12,0x92,0x1b,0x49,0x83,0x3d,0x68,0x48,0xfd,0xf7};
 void os_getDevKey (u1_t* buf) {  memcpy_P(buf, APPKEY, 16);}
 
 static uint8_t mydata[] = "Hello, world!";
@@ -72,7 +81,7 @@ static osjob_t sendjob;
 
 // Schedule TX every this many seconds (might become longer due to duty
 // cycle limitations).
-const unsigned TX_INTERVAL = 30;
+const unsigned TX_INTERVAL = 60;
 
 const lmic_pinmap lmic_pins = {
     .nss = 8,
@@ -230,10 +239,13 @@ void do_send(osjob_t* j){
     } else {
 
 
+  float temp = bme.readTemperature(); //C
+  float humid = bme.readHumidity(); //%
+  float pressure = bme.readPressure() / 100.0F; // hPa
   lpp.reset();
-  lpp.addTemperature(1, 0.0);
-  lpp.addRelativeHumidity(2,0.0);
-  lpp.addBarometricPressure(3, 0.0);
+  lpp.addTemperature(1, temp);
+  lpp.addRelativeHumidity(2,humid);
+  lpp.addBarometricPressure(3, pressure);
   //lpp.addGPS(3, 52.37365, 4.88650, 2);
 
   
@@ -248,7 +260,14 @@ void do_send(osjob_t* j){
 
 void setup() {
     //delay(5000);
+    
+unsigned status;
+    
+    // default settings
+    status = bme.begin(); 
 
+    
+    
     //pinMode(13, INPUT_PULLUP);
 
 
@@ -292,7 +311,7 @@ if(RTC_SLEEP) {
 
     LMIC_setLinkCheckMode(0);
     LMIC_setDrTxpow(DR_SF7,14);
-    LMIC_selectSubBand(1);
+    //LMIC_selectSubBand(1);
 
     // Start job (sending automatically starts OTAA too)
     do_send(&sendjob);
